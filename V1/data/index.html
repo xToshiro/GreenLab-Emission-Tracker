@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt"> <!-- Updated language to Portuguese (pt) -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gttema Air Quality Monitor"> <!-- Added meta description -->
+    <title>Trama Monitor</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <section class="index-charts">
+        <div class="chart-container">
+            <div class="chart-title">
+                <h1>GreenLab Emission Tracker</h1>
+                <p>Powered by <a href="" target="_blank">Trama</a></p>
+            </div>
+            <div class="chart-visuals">
+                <!-- Temperature, Humidity, Pressure Charts -->
+				<div id="chart-temperature" class="chart-visual"></div>
+				<div id="chart-humidity" class="chart-visual"></div>
+				<div id="chart-pressure" class="chart-visual"></div>
+			</div>
+			<div class="chart-visuals">
+                <!-- PM1, PM2.5, PM10 Charts -->
+				<div id="chart-pm1" class="chart-visual"></div>
+				<div id="chart-pm25" class="chart-visual"></div>
+				<div id="chart-pm10" class="chart-visual"></div>
+			</div>
+			<div class="chart-visuals">
+                <!-- CO, NOx, Ozone Charts -->
+				<div id="chart-co" class="chart-visual"></div>
+				<div id="chart-nox" class="chart-visual"></div>
+				<div id="chart-ozon" class="chart-visual"></div>
+			</div>
+        </div>
+    </section>
+    <!-- Scripts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/themes/grid-light.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/offline-exporting.js"></script> 
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
