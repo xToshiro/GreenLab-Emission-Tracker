@@ -48,8 +48,6 @@ AsyncWebServer server(80);
 Adafruit_BME280 bme;
 int rtcdia, rtcmes, rtcano, rtchora, rtcminuto, rtcsegundo{ 0 };
 float temp, hum, pres, alt, temperatureC{ 0 };
-int gpsUpdate = 0;
-
 int pm1, pm2, pm10, co2, tvoc{ 0 };
 
 void setup() {
@@ -58,7 +56,8 @@ void setup() {
 
   pinMode(LED, OUTPUT);
 
-  sensorBegin();
+  Serial.println(F("Initiating and testing sensors!"));
+  initializeAndTestSensors();
   initSDCard();
   checkSDFile();
 
@@ -67,6 +66,7 @@ void setup() {
   synchronizeRTC();
 
   //Verifica e inicia a memoria flash local do esp que contem a dashboard gráfica
+  Serial.println(F("Initiating local Dashboard"));
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
@@ -75,6 +75,7 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(LED, LOW);
   if (rtc.getSecond() != rtcsegundo) {
     digitalWrite(LED, HIGH);
     displayDateTime();
@@ -82,7 +83,29 @@ void loop() {
     readPMSData();
     readCCSData();
     saveData();
+    serverUpdate();
   }
+}
+
+void connectToWiFi() {
+
+  // Conecta-se à rede Wi-Fi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+
+  // Imprime o endereço IP atribuído ao ESP32
+  Serial.println("");
+  Serial.println("Wifi connected!");
+  Serial.print("Local IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.print("MAC Address: ");
+  Serial.println(WiFi.macAddress());
+
 }
 
 void synchronizeRTC() {
@@ -112,6 +135,7 @@ void displayDateTime() {
   rtcsegundo = rtc.getSecond();
 }
 
+// Function to read sensor data from BME280
 void readBMEData() {
   if (bme.begin(0x76)) {
     temp = bme.readTemperature();
@@ -119,86 +143,66 @@ void readBMEData() {
     pres = bme.readPressure();
     alt = bme.readAltitude(SEALEVELPRESSURE_HPA);
   } else {
-    temp = 0;
-    hum = 0;
-    pres = 0;
-    alt = 0;
+    temp = hum = pres = alt = 0;
   }
 }
 
+// Function to read sensor data from PMS
 void readPMSData() {
-
-    pms.read();
-    if (pms) {
-      pm1 = (pms.pm01);
-      pm2 = (pms.pm25);
-      pm10 = (pms.pm10);
-    } else {
-      pm1 = 0;
-      pm2 = 0;
-      pm10 = 0;
-    }
-  
-
-}
-
-void readCCSData () {
-
-    if (CCS811.checkDataReady() == true) {
-      co2 = (CCS811.getCO2PPM());
-      tvoc = (CCS811.getTVOCPPB());
-      //CCS811.writeBaseLine(0x447B);
-    } else {
-      co2 = 0;
-      tvoc = 0;
-    }
-
-}
-
-// Inicia os sensores
-void sensorBegin() {
-  bme.begin(0x76);  //Sensor I2C Address
-  Wire.setClock(100000);
-  CCS811.begin();
-  pms.init();
-}
-
-void sensorTest() {
-  // Testa o DHT
-  if (!bme.begin(0x76)) {
-    delay(500);
-    Serial.println("temp erro");
-
-  } else {
-    Serial.println("temp ok");
-  }
-  delay(500);
-
-  // Testa o PMS
   pms.read();
   if (pms) {
-    Serial.println("mp ok");
+    pm1 = pms.pm01;
+    pm2 = pms.pm25;
+    pm10 = pms.pm10;
   } else {
-    delay(500);
-    Serial.println("mp erro");
+    pm1 = pm2 = pm10 = 0;
   }
-  delay(500);
+}
 
-  // Testa o sensor de TVOCs
-  if (CCS811.checkDataReady() == true) {
-    Serial.println("ccs ok");
+// Function to read sensor data from CCS811
+void readCCSData() {
+  if (CCS811.checkDataReady()) {
+    co2 = CCS811.getCO2PPM();
+    tvoc = CCS811.getTVOCPPB();
+    // CCS811.writeBaseLine(0x447B);
   } else {
-    delay(500);
-    Serial.println("ccs erro");
+    co2 = tvoc = 0;
   }
-  delay(500);
+}
 
+void initializeAndTestSensors() {
+  // Initialize BME sensor and check
+  bme.begin(0x76);
+  Wire.setClock(100000);
+  if (!bme.begin(0x76)) {
+    Serial.println("BME sensor initialization error");
+  } else {
+    Serial.println("BME sensor initialization successful");
+  }
+
+  // Initialize CCS811 sensor and check
+  CCS811.begin();
+  if (!CCS811.checkDataReady()) {
+    Serial.println("CCS811 sensor initialization error");
+  } else {
+    Serial.println("CCS811 sensor initialization successful");
+  }
+
+  // Initialize PMS sensor and check
+  pms.init();
+  pms.read();
+  if (!pms) {
+    Serial.println("PMS sensor initialization error");
+  } else {
+    Serial.println("PMS sensor initialization successful");
+  }
+
+  // Initialize and check Dallas temperature sensor
   sensors.requestTemperatures();
   float temperatureC = sensors.getTempCByIndex(0);
-  delay(500);
   if (temperatureC < 0) {
+    Serial.println("Dallas temperature sensor initialization error");
   } else {
-    delay(500);
+    Serial.println("Dallas temperature sensor initialization successful");
   }
-
 }
