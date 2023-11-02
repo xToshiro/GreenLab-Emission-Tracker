@@ -53,22 +53,26 @@ int pm1, pm2, pm10, co2, tvoc{ 0 };
 void setup() {
   Serial.begin(9600);
   Serial.println(F("GreenLab Emission Tracker - Coded by Jairo Ivo"));
-
+  delay(500);
   pinMode(LED, OUTPUT);
 
+  Serial.println(F("Initiating Wifi connection!"));
+  connectToWiFi();
+  delay(500);
+  
   Serial.println(F("Initiating and testing sensors!"));
   initializeAndTestSensors();
-  initSDCard();
-  checkSDFile();
+  initSDCard();checkSDFile();
+  delay(500);
 
   Serial.println(F("Initiating NTP synchronization for internal RTC!"));
   delay(500);
   synchronizeRTC();
 
   //Verifica e inicia a memoria flash local do esp que contem a dashboard gráfica
-  Serial.println(F("Initiating local Dashboard"));
+  Serial.println(F("Initiating local Dashboard!"));
   if(!SPIFFS.begin()){
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    Serial.println("An Error has occurred while mounting SPIFFS!");
     return;
   }
 
@@ -138,10 +142,7 @@ void displayDateTime() {
 // Function to read sensor data from BME280
 void readBMEData() {
   if (bme.begin(0x76)) {
-    temp = bme.readTemperature();
-    hum = bme.readHumidity();
-    pres = bme.readPressure();
-    alt = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    temp = bme.readTemperature(); hum = bme.readHumidity(); pres = bme.readPressure(); alt = bme.readAltitude(SEALEVELPRESSURE_HPA);
   } else {
     temp = hum = pres = alt = 0;
   }
@@ -151,9 +152,7 @@ void readBMEData() {
 void readPMSData() {
   pms.read();
   if (pms) {
-    pm1 = pms.pm01;
-    pm2 = pms.pm25;
-    pm10 = pms.pm10;
+    pm1 = pms.pm01; pm2 = pms.pm25; pm10 = pms.pm10;
   } else {
     pm1 = pm2 = pm10 = 0;
   }
@@ -162,8 +161,7 @@ void readPMSData() {
 // Function to read sensor data from CCS811
 void readCCSData() {
   if (CCS811.checkDataReady()) {
-    co2 = CCS811.getCO2PPM();
-    tvoc = CCS811.getTVOCPPB();
+    co2 = CCS811.getCO2PPM(); tvoc = CCS811.getTVOCPPB();
     // CCS811.writeBaseLine(0x447B);
   } else {
     co2 = tvoc = 0;
@@ -172,8 +170,7 @@ void readCCSData() {
 
 void initializeAndTestSensors() {
   // Initialize BME sensor and check
-  bme.begin(0x76);
-  Wire.setClock(100000);
+  bme.begin(0x76); Wire.setClock(100000);
   if (!bme.begin(0x76)) {
     Serial.println("BME sensor initialization error");
   } else {
@@ -189,8 +186,7 @@ void initializeAndTestSensors() {
   }
 
   // Initialize PMS sensor and check
-  pms.init();
-  pms.read();
+  pms.init(); pms.read();
   if (!pms) {
     Serial.println("PMS sensor initialization error");
   } else {
@@ -198,8 +194,7 @@ void initializeAndTestSensors() {
   }
 
   // Initialize and check Dallas temperature sensor
-  sensors.requestTemperatures();
-  float temperatureC = sensors.getTempCByIndex(0);
+  sensors.requestTemperatures(); float temperatureC = sensors.getTempCByIndex(0);
   if (temperatureC < 0) {
     Serial.println("Dallas temperature sensor initialization error");
   } else {
